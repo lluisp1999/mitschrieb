@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deutschkurs Mitschrieb</title>
+<meta name="theme-color" content="#F6F7FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1424" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mitschrieb">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); } body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one phone-width column on squared exercise-book paper; sticky top bar, fixed tab bar at the bottom,
+   practice opens as a full-screen sheet. Ink blue for actions, correction red / tick green for results,
+   der/die/das tinted blue/red/green as in German textbooks. */
+:root {
+  --paper: #F6F7FA;
+  --grid: rgba(48, 84, 168, 0.075);
+  --card: #FFFFFF;
+  --ink: #17223B;
+  --muted: #5D6884;
+  --line: #DCE1EC;
+  --soft: #EEF1F8;
+  --accent: #1E4FC2;
+  --accent-ink: #FFFFFF;
+  --good: #23784A;
+  --bad: #C2352C;
+  --warn: #A86A12;
+  --der: #1F5BD0;
+  --die: #C2352C;
+  --das: #23784A;
+  --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", system-ui, -apple-system, "Arial Narrow", sans-serif;
+  --r: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1424; --grid: rgba(130, 160, 230, 0.06); --card: #151D31; --ink: #E7ECF6; --muted: #9AA6C2;
+    --line: #27324B; --soft: #1B2540; --accent: #7EA0FF; --accent-ink: #0E1424; --good: #5FCB8E; --bad: #FF8178;
+    --warn: #E3B35A; --der: #86A6FF; --die: #FF8E86; --das: #6CD49C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1424; --grid: rgba(130, 160, 230, 0.06); --card: #151D31; --ink: #E7ECF6; --muted: #9AA6C2;
+  --line: #27324B; --soft: #1B2540; --accent: #7EA0FF; --accent-ink: #0E1424; --good: #5FCB8E; --bad: #FF8178;
+  --warn: #E3B35A; --der: #86A6FF; --die: #FF8E86; --das: #6CD49C; color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font: 400 16px/1.45 var(--font-ui);
+  -webkit-text-size-adjust: 100%;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--paper); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 12px; padding-block: 10px; min-height: 52px; }
+.brand { font: 700 22px/1 var(--font-display); letter-spacing: 0.02em; text-transform: uppercase; }
+.brand small { font: 500 13px/1 var(--font-ui); letter-spacing: 0.04em; color: var(--muted); text-transform: none; margin-left: 6px; }
+.top .spacer { flex: 1; }
+.back { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 6px 4px; color: var(--accent); font-weight: 600; text-decoration: none; }
+.sync { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.sync.ok i { background: var(--good); }
+.sync.off i { background: var(--bad); }
+
+main { padding-block: 16px 120px; display: grid; gap: 20px; }
+
+/* bottom tabs */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tabs .wrap { display: grid; grid-template-columns: repeat(4, 1fr); }
+.tabs a { display: grid; justify-items: center; gap: 2px; padding: 8px 0 9px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+.tabs a svg { width: 22px; height: 22px; }
+.tabs a[aria-current="page"] { color: var(--accent); }
+.tabs .badge { position: absolute; top: 4px; left: 50%; transform: translateX(5px); background: var(--bad); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 5px; line-height: 1.3; }
+.tabs a { position: relative; }
+
+/* type */
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font: 700 30px/1.05 var(--font-display); letter-spacing: 0.005em; }
+h2 { font: 600 13px/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+h3 { font: 600 19px/1.2 var(--font-display); letter-spacing: 0.01em; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.section { display: grid; gap: 10px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* panels */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.hero { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; display: grid; gap: 2px; }
+.stat b { font: 700 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); padding: 10px 14px; font-weight: 600; min-height: 44px; text-decoration: none; color: var(--ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.good { background: var(--good); border-color: var(--good); color: #fff; }
+.btn.bad { background: var(--card); border-color: var(--bad); color: var(--bad); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); white-space: nowrap; }
+.chip.lvl { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.chip.done { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.chip.started { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+
+/* lesson list */
+.list { display: grid; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.item { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; text-decoration: none; color: inherit; border-top: 1px solid var(--line); min-width: 0; }
+.item:first-child { border-top: 0; }
+.item:active { background: var(--soft); }
+.date { display: grid; justify-items: center; line-height: 1; }
+.date b { font: 700 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.date span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-top: 3px; }
+.item .t { min-width: 0; display: grid; gap: 2px; }
+.item .t strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .t span { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mark { width: 26px; height: 26px; }
+.mark circle { fill: none; stroke: var(--line); stroke-width: 2.5; }
+.mark .arc { stroke: var(--warn); stroke-linecap: round; }
+.mark.done circle { fill: var(--good); stroke: var(--good); }
+.mark.done path { stroke: #fff; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.month { padding: 4px 2px 0; }
+.search { width: 100%; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 11px 12px; min-height: 44px; }
+
+/* lesson detail */
+.lhead { display: grid; gap: 8px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--soft); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: none; border-radius: 8px; padding: 8px 4px; font-weight: 600; font-size: 14px; color: var(--muted); min-height: 38px; }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.vlist { display: grid; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.v { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 11px 14px; border-top: 1px solid var(--line); align-items: start; min-width: 0; }
+.v:first-child { border-top: 0; }
+.v .de { font-weight: 600; font-size: 17px; overflow-wrap: anywhere; }
+.v .en { color: var(--muted); grid-column: 1; overflow-wrap: anywhere; }
+.v .ex { grid-column: 1 / -1; font-size: 14px; color: var(--muted); font-style: italic; }
+.v .orig { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.v .orig s { text-decoration-color: var(--bad); }
+.added { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 6px; vertical-align: 2px; font-weight: 500; }
+.hide .v .en, .hide .v .ex { filter: blur(6px); cursor: pointer; transition: filter .15s; }
+.hide .v.show .en, .hide .v.show .ex { filter: none; }
+.art-der { color: var(--der); } .art-die { color: var(--die); } .art-das { color: var(--das); }
+.say { border: 0; background: none; color: var(--muted); padding: 2px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; }
+.say:active { background: var(--soft); }
+.say svg { width: 18px; height: 18px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.switch { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 600; min-height: 36px; }
+.switch[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.gcard { display: grid; gap: 10px; }
+.gcard p { max-width: 65ch; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 7px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+thead th { border-top: 0; background: var(--soft); font-weight: 600; font-size: 13px; letter-spacing: 0.02em; }
+tbody td:first-child { font-weight: 600; }
+.exs { display: grid; gap: 8px; }
+.exs div { display: grid; gap: 1px; border-left: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); padding-left: 10px; }
+.exs b { font-weight: 600; }
+.exs span { color: var(--muted); font-size: 14px; }
+
+/* archive */
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+.heat i { width: 14px; height: 14px; border-radius: 3px; background: var(--soft); display: block; }
+.heat i[data-n="1"] { background: color-mix(in srgb, var(--accent) 35%, var(--soft)); }
+.heat i[data-n="2"] { background: color-mix(in srgb, var(--accent) 65%, var(--soft)); }
+.heat i[data-n="3"] { background: var(--accent); }
+.heat i.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+.log { display: grid; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.log .e { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line); align-items: center; text-decoration: none; color: inherit; }
+.log .e:first-child { border-top: 0; }
+.log .e .tm { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.log .e .w { min-width: 0; display: grid; }
+.log .e .w strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log .e .w span { font-size: 13px; color: var(--muted); }
+.score { font: 700 18px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.score.hi { color: var(--good); } .score.mid { color: var(--warn); } .score.lo { color: var(--bad); }
+
+.empty { text-align: center; padding: 28px 16px; display: grid; gap: 8px; justify-items: center; color: var(--muted); }
+.empty h3 { color: var(--ink); }
+.skel { height: 14px; border-radius: 6px; background: var(--soft); }
+
+/* practice sheet */
+.sheet { position: fixed; inset: 0; z-index: 50; background: var(--paper); display: grid; grid-template-rows: auto auto 1fr auto; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sheet > .wrap { width: 100%; }
+.sheet .bar { display: flex; align-items: center; gap: 10px; padding-block: 10px; }
+.sheet .bar .x { border: 0; background: none; width: 44px; height: 44px; display: grid; place-items: center; color: var(--muted); border-radius: 10px; }
+.sheet .bar .x svg { width: 22px; height: 22px; }
+.prog { height: 4px; background: var(--soft); border-radius: 4px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+.stage { display: grid; align-content: center; gap: 14px; padding-block: 16px; min-height: 0; overflow-y: auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px 20px; min-height: 220px; display: grid; align-content: center; justify-items: center; gap: 12px; text-align: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.card .front { font: 600 30px/1.15 var(--font-display); overflow-wrap: anywhere; }
+.card .front.long { font: 600 22px/1.25 var(--font-ui); }
+.card .back { font-size: 19px; color: var(--ink); border-top: 1px dashed var(--line); padding-top: 12px; width: 100%; overflow-wrap: anywhere; }
+.card .back .ex { display: block; font-size: 15px; color: var(--muted); font-style: italic; margin-top: 6px; }
+.card .hint { font-size: 13px; color: var(--muted); }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-block: 12px; }
+.controls.one { grid-template-columns: 1fr; }
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 13px 14px; min-height: 50px; font-weight: 500; }
+.opt.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--card)); }
+.opt.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--card)); }
+.cloze { font-size: 21px; line-height: 1.4; text-align: center; }
+.cloze input { width: 100%; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 18px; background: var(--card); text-align: center; }
+.verdict { font-weight: 600; text-align: center; }
+.verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); }
+.result { display: grid; gap: 14px; justify-items: center; text-align: center; }
+.result .big { font: 700 64px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.missed { width: 100%; text-align: left; }
+
+.fld { display: grid; gap: 4px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.fld input { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 11px 12px; min-height: 44px; font-weight: 400; color: var(--ink); width: 100%; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.steps a, .panel a { color: var(--accent); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 10px 14px; border-radius: 10px; font-size: 14px; z-index: 60; max-width: calc(100% - 32px); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@media (min-width: 700px) { h1 { font-size: 36px; } }
+</style>
+
+</head>
+<body>
+<header class="top"><div class="wrap" id="topbar"></div></header>
+<main class="wrap" id="view" aria-live="polite"></main>
+<nav class="tabs" aria-label="Bereiche"><div class="wrap" id="tabs"></div></nav>
+<div id="sheet" class="sheet" hidden></div>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const wordsDiffer = (a, b) => { const w = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim(); return w(a) !== w(b); };
+const ttl = s => esc(s).replace(/ · /g, "&nbsp;· "); // keep the separator dot at the end of a line, never the start
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem("ms:" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("ms:" + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+const MONTHS = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+const MONTHS_LONG = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const DAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+const pad = n => String(n).padStart(2, "0");
+const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseDay = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const fmtDate = s => { const d = parseDay(s); return `${d.getDate()}. ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const cardKey = s => { let h = 5381; for (const ch of s) h = (((h << 5) + h) + ch.codePointAt(0)) >>> 0; return "k" + h.toString(36); };
+const BOX_DAYS = [0, 1, 3, 7, 14, 30];
+const MODE_NAMES = { flash: "Karteikarten", phrases: "Sätze", quiz: "Quiz", ex: "Übungen", review: "Wiederholung" };
+
+function deHTML(de) {
+  const m = /^(der|die|das)(\/(?:der|die|das))?\s+(.*)$/i.exec(de);
+  if (!m) return esc(de);
+  return `<span class="art-${m[1].toLowerCase()}">${esc(m[1] + (m[2] || ""))}</span> ${esc(m[3])}`;
+}
+const ICON = {
+  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M8.5 14.5l2.2 2.2 4.8-4.7"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h11a3 3 0 0 1 3 3v12.5H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h11M8 8.5h6"/></svg>',
+  repeat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7"/></svg>',
+  archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM5.5 8v11.5h13V8M10 12h4"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  speak: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>'
+};
+
+/* ---------- speech (German voice if the device has one) ---------- */
+const canSpeak = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+function speak(text) {
+  if (!canSpeak) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\+ ?(Akk|Dat|Gen)\.?/g, ""));
+    u.lang = "de-DE"; u.rate = 0.92;
+    const v = speechSynthesis.getVoices().find(v => /^de(-|_)/i.test(v.lang));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch (e) { /* speech unavailable */ }
+}
+const sayBtn = text => canSpeak ? `<button class="say" data-say="${esc(text)}" aria-label="Vorlesen">${ICON.speak}</button>` : "";
+
+/* ---------- state ---------- */
+const S = {
+  conn: "loading", err: "", index: LS.get("index", null), data: LS.get("data", null) || { progress: {}, sessions: [] },
+  lessons: {}, loading: {}, route: "heute", tab: LS.get("tab", "w"), hide: false, search: "", dir: LS.get("dir", "de")
+};
+Object.defineProperty(S, "progress", { get() { return S.data.progress; } });
+Object.defineProperty(S, "sessions", { get() { return S.data.sessions; } });
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+/* ---------- GitHub storage ----------
+   Lessons (lessons/*.json, lessons/index.json) and progress (progress.json) live in a private GitHub
+   repository. Each device reaches it with a personal access token that stays in this browser only.
+   Progress is saved locally first, then pushed; if another device saved in between, both are merged. */
+const DEFAULT_REPO = "lluisp1999/mitschrieb-data";
+let CFG = LS.get("cfg", null);   // {repo: "owner/name", token}
+let SHA = LS.get("sha", null), rev = 0, syncing = false, syncAgain = false;
+
+const b64encode = str => { const by = new TextEncoder().encode(str); let bin = ""; for (let i = 0; i < by.length; i += 0x8000) bin += String.fromCharCode.apply(null, by.subarray(i, i + 0x8000)); return btoa(bin); };
+const b64decode = b64 => new TextDecoder().decode(Uint8Array.from(atob(String(b64).replace(/\s/g, "")), c => c.charCodeAt(0)));
+class GhError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+function gh(path, { method = "GET", body, raw = false } = {}) {
+  const headers = { Authorization: "Bearer " + CFG.token, Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  if (body) headers["Content-Type"] = "application/json";
+  return fetch(`https://api.github.com/repos/${CFG.repo}/${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+}
+async function ghJSON(path) {
+  const r = await gh("contents/" + path, { raw: true });
+  if (!r.ok) throw new GhError(r.status, path + " " + r.status);
+  return r.json();
+}
+async function readProgress() {
+  const r = await gh("contents/progress.json");
+  if (r.status === 404) return { data: { progress: {}, sessions: [] }, sha: null };
+  if (!r.ok) throw new GhError(r.status, "progress " + r.status);
+  const meta = await r.json();
+  let b64 = meta.content;
+  if (!b64 || meta.encoding === "none") {   // files over 1 MB arrive without content: read the blob instead
+    const b = await gh("git/blobs/" + meta.sha); if (!b.ok) throw new GhError(b.status, "blob " + b.status);
+    b64 = (await b.json()).content;
+  }
+  const d = JSON.parse(b64decode(b64));
+  return { data: { progress: d.progress || {}, sessions: d.sessions || [] }, sha: meta.sha };
+}
+const RANK = { done: 2, started: 1 };
+function mergeData(a, b) {   // combine two copies of the progress (e.g. phone and laptop)
+  const out = { progress: {}, sessions: [] };
+  for (const lid of new Set([...Object.keys(a.progress), ...Object.keys(b.progress)])) {
+    const x = a.progress[lid] || {}, y = b.progress[lid] || {};
+    const cards = Object.assign({}, x.cards || {});
+    for (const [k, c] of Object.entries(y.cards || {})) if (!cards[k] || (c.t || 0) > (cards[k].t || 0)) cards[k] = c;
+    const xs = x.statusAt || "", ys = y.statusAt || "";
+    const st = ys > xs ? y : xs > ys ? x : ((RANK[y.status] || 0) > (RANK[x.status] || 0) ? y : x);
+    const o = { cards, n: Math.max(x.n || 0, y.n || 0), best: Math.max(x.best || 0, y.best || 0), last: [x.last || "", y.last || ""].sort().pop() };
+    if (st.status) o.status = st.status;
+    if (st.statusAt) o.statusAt = st.statusAt;
+    if (st.doneAt) o.doneAt = st.doneAt;
+    out.progress[lid] = o;
+  }
+  const seen = new Set();
+  for (const s of [...a.sessions, ...b.sessions]) if (s && s.id && !seen.has(s.id)) { seen.add(s.id); out.sessions.push(s); }
+  out.sessions.sort((p, q) => String(q.at).localeCompare(String(p.at)));
+  return out;
+}
+function persistLocal() { LS.set("data", S.data); LS.set("sha", SHA); }
+function markDirty() { rev++; LS.set("dirty", true); persistLocal(); clearTimeout(markDirty.t); markDirty.t = setTimeout(sync, 700); render(); }
+
+async function sync() {
+  if (!CFG) return;
+  if (syncing) { syncAgain = true; return; }
+  syncing = true; render();
+  try {
+    for (let attempt = 0; attempt < 5 && LS.get("dirty", false); attempt++) {
+      const startRev = rev;
+      const r = await gh("contents/progress.json", { method: "PUT", body: {
+        message: "Fortschritt " + new Date().toISOString().slice(0, 16).replace("T", " "),
+        content: b64encode(JSON.stringify(S.data)), ...(SHA ? { sha: SHA } : {}) } });
+      if (r.ok) { SHA = (await r.json()).content.sha; if (rev === startRev) LS.set("dirty", false); persistLocal(); S.conn = "ok"; S.err = ""; continue; }
+      if (r.status === 409 || r.status === 422 || r.status === 400) {   // saved elsewhere meanwhile: merge, then try again
+        const remote = await readProgress(); S.data = mergeData(S.data, remote.data); SHA = remote.sha; persistLocal(); continue;
+      }
+      throw new GhError(r.status, "save " + r.status);
+    }
+  } catch (e) { S.conn = "off"; S.err = e.status === 401 || e.status === 403 ? "token" : "net"; }
+  syncing = false; render();
+  if (syncAgain) { syncAgain = false; sync(); }
+}
+
+async function refresh() {
+  if (!CFG) return;
+  try {
+    const [index, remote] = await Promise.all([ghJSON("lessons/index.json"), readProgress()]);
+    S.index = index; LS.set("index", index);
+    S.data = LS.get("dirty", false) ? mergeData(S.data, remote.data) : remote.data;
+    SHA = remote.sha; persistLocal();
+    S.conn = "ok"; S.err = "";
+    if (LS.get("dirty", false)) sync();
+  } catch (e) {
+    S.conn = "off";
+    S.err = e.status === 401 || e.status === 403 ? "token" : e.status === 404 ? "repo" : "net";
+  }
+  render();
+}
+
+async function init() {
+  route(false);
+  if (!CFG) { S.conn = "setup"; render(); return; }
+  render();          // cached lessons and progress show at once
+  await refresh();
+  window.addEventListener("online", refresh);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !P) refresh(); });
+}
+
+async function loadLesson(id) {
+  if (S.lessons[id] !== undefined || S.loading[id]) return;
+  const meta = lessonsMeta().find(m => m.id === id) || {};
+  const cached = LS.get("lesson:" + id, null);
+  if (cached && (cached.__h === meta.h || !CFG)) { S.lessons[id] = cached; return; }   // synchronous: the caller renders it
+  if (!CFG) { S.lessons[id] = null; return; }
+  S.loading[id] = true;
+  try { const L = await ghJSON("lessons/" + id + ".json"); L.__h = meta.h; S.lessons[id] = L; LS.set("lesson:" + id, L); }
+  catch (e) { if (cached) S.lessons[id] = cached; else { S.lessons[id] = null; toast("Lektion konnte nicht geladen werden."); } }
+  S.loading[id] = false;
+  render();
+}
+
+const lessonsMeta = () => (S.index && Array.isArray(S.index.lessons) ? S.index.lessons.slice().sort((a, b) => b.date.localeCompare(a.date)) : []);
+const statusOf = id => (S.progress[id] && S.progress[id].status) || "new";
+
+function dueCards() {
+  const now = Date.now(), out = [];
+  for (const [lid, p] of Object.entries(S.progress)) {
+    for (const [k, c] of Object.entries(p.cards || {})) {
+      const b = Math.min(c.b || 0, 5);
+      if ((c.t || 0) + BOX_DAYS[b] * 864e5 <= now) out.push({ k, lid, de: c.de, en: c.en, b });
+    }
+  }
+  return out.sort((a, b) => a.b - b.b || a.k.localeCompare(b.k));
+}
+function learnedCount() {
+  let n = 0; for (const p of Object.values(S.progress)) for (const c of Object.values(p.cards || {})) if ((c.b || 0) >= 3) n++; return n;
+}
+function sessionDays() { const s = new Set(); S.sessions.forEach(x => { if (x.at) s.add(dayKey(new Date(x.at))); }); return s; }
+function streak() {
+  const days = sessionDays(); let n = 0; const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* ---------- routing ---------- */
+function route(doRender = true) {
+  const h = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+  S.route = /^(heute|lektionen|wiederholen|archiv|einstellungen)$/.test(h) || /^l-\d{4}-\d{2}-\d{2}$/.test(h) ? h : "heute";
+  if (doRender) { render(); window.scrollTo(0, 0); }
+}
+window.addEventListener("hashchange", () => route(true));
+
+/* ---------- rendering ---------- */
+function render() {
+  renderTop(); renderTabs();
+  const v = $("#view");
+  if (!CFG || S.route === "einstellungen" || ((S.err === "token" || S.err === "repo") && !S.index)) { v.innerHTML = viewSetup(); return; }
+  if (S.conn === "off" && !S.index) { v.innerHTML = viewOffline(); return; }
+  if (S.route.startsWith("l-")) v.innerHTML = viewLesson(S.route.slice(2));
+  else if (S.route === "lektionen") {
+    const list = $("#lessonList"), inp = $("#q");
+    if (list && inp && S.index) { list.innerHTML = lessonGroups(lessonsMeta()); return; } // keep the search box (and its focus) as is
+    v.innerHTML = viewLessons(); const q = $("#q"); if (q) q.value = S.search;
+  }
+  else if (S.route === "wiederholen") v.innerHTML = viewReview();
+  else if (S.route === "archiv") v.innerHTML = viewArchive();
+  else v.innerHTML = viewToday();
+}
+
+function renderTop() {
+  const pending = LS.get("dirty", false);
+  const conn = !CFG ? "" : S.err === "token" ? '<a class="sync off" href="#einstellungen"><i></i>Token prüfen</a>'
+    : S.conn === "off" ? `<a class="sync off" href="#einstellungen"><i></i>${pending ? "Offline · lokal gespeichert" : "Offline"}</a>`
+    : syncing || pending ? '<a class="sync" href="#einstellungen"><i></i>Speichert…</a>'
+    : S.conn === "ok" ? '<a class="sync ok" href="#einstellungen"><i></i>Synchronisiert</a>' : '<span class="sync"><i></i>Lädt…</span>';
+  const left = S.route.startsWith("l-") || S.route === "einstellungen"
+    ? (S.route === "einstellungen" ? `<a class="back" href="#heute">${ICON.back}Zurück</a>` : `<a class="back" href="#lektionen">${ICON.back}Lektionen</a>`)
+    : `<span class="brand">Mitschrieb<small>Deutschkurs</small></span>`;
+  $("#topbar").innerHTML = `${left}<span class="spacer"></span>${conn}`;
+}
+
+function renderTabs() {
+  const due = dueCards().length;
+  const cur = S.route.startsWith("l-") ? "lektionen" : S.route;
+  const t = (id, label, icon, badge) => `<a href="#${id}" ${cur === id ? 'aria-current="page"' : ""}>${icon}${badge ? `<span class="badge num">${badge > 99 ? "99+" : badge}</span>` : ""}<span>${label}</span></a>`;
+  $("#tabs").innerHTML = t("heute", "Heute", ICON.today) + t("lektionen", "Lektionen", ICON.book) + t("wiederholen", "Wiederholen", ICON.repeat, due) + t("archiv", "Archiv", ICON.archive);
+}
+
+function viewOffline() {
+  return `<div class="panel empty"><h3>Keine Verbindung</h3>
+    <p>GitHub can't be reached right now and this device has no saved copy of your lessons yet. Check the internet connection and try again.</p>
+    <button class="btn primary" data-act="retry">Erneut versuchen</button></div>`;
+}
+
+function viewSetup() {
+  const repo = (CFG && CFG.repo) || DEFAULT_REPO;
+  const msg = S.err === "token" ? "GitHub didn't accept the token (it may have expired). Create a new one as below and paste it here."
+    : S.err === "repo" ? "The repository or its lessons/index.json wasn't found. Check the name, and that the token was given access to this repository."
+    : S.err === "net" && CFG ? "GitHub can't be reached right now; your practice is kept on this device and saved once you're back online." : "";
+  return `<div class="lhead"><h1>${CFG ? "Einstellungen" : "Verbinden"}</h1>
+      <p class="muted">Your lessons and progress are stored in your private GitHub repository. Each device needs a GitHub token once; it is kept in this browser only.</p></div>
+    ${msg ? `<div class="panel" style="border-color:var(--bad)"><p>${esc(msg)}</p></div>` : ""}
+    <form class="panel" id="setup">
+      <label class="fld" for="repo"><span>Repository</span><input id="repo" value="${esc(repo)}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label class="fld" for="token"><span>GitHub token${CFG ? " (leave empty to keep the current one)" : ""}</span><input id="token" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <button class="btn primary" type="submit">${CFG ? "Speichern" : "Verbinden"}</button>
+    </form>
+    <section class="section"><h2>Token erstellen</h2><div class="panel"><ol class="steps">
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>, signed in to GitHub.</li>
+      <li>Token name: <b>Mitschrieb</b>. Expiration: the longest offered (when it runs out, make a new one and paste it here).</li>
+      <li>Repository access: <b>Only select repositories</b> → <b>${esc(repo.split("/")[1] || "mitschrieb-data")}</b>.</li>
+      <li>Permissions → Repository permissions → <b>Contents</b>: <b>Read and write</b>.</li>
+      <li><b>Generate token</b>, copy it and paste it above.</li>
+    </ol></div></section>
+    ${CFG ? `<button class="btn" data-act="logout">Token von diesem Gerät entfernen</button>` : ""}`;
+}
+
+function markSVG(status) {
+  if (status === "done") return '<svg class="mark done" viewBox="0 0 26 26" aria-label="abgeschlossen"><circle cx="13" cy="13" r="11"/><path d="M8 13.5l3.3 3.2L18.2 9.8"/></svg>';
+  if (status === "started") return '<svg class="mark" viewBox="0 0 26 26" aria-label="angefangen"><circle cx="13" cy="13" r="11"/><path class="arc" d="M13 2a11 11 0 0 1 0 22" fill="none" stroke-width="2.5"/></svg>';
+  return '<svg class="mark" viewBox="0 0 26 26" aria-label="neu"><circle cx="13" cy="13" r="11"/></svg>';
+}
+
+function lessonItem(m) {
+  const d = parseDay(m.date);
+  const counts = [m.basic ? "Rohfassung" : "", m.nv ? `${m.nv} Wörter` : "", m.ng ? `${m.ng} Grammatik` : "", m.np ? `${m.np} Sätze` : ""].filter(Boolean).join(" · ");
+  return `<a class="item" href="#l-${esc(m.id)}">
+    <div class="date"><b>${d.getDate()}</b><span>${MONTHS[d.getMonth()]}</span></div>
+    <div class="t"><strong>${esc(m.title)}</strong><span>${esc(counts)}</span></div>
+    ${markSVG(statusOf(m.id))}</a>`;
+}
+
+function loadingRows(n) { return `<div class="panel">${Array.from({ length: n }, () => '<div class="skel"></div>').join("")}</div>`; }
+
+function viewToday() {
+  const now = new Date();
+  const metas = lessonsMeta();
+  const head = `<div class="lhead"><h2>${DAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS_LONG[now.getMonth()]}</h2><h1>Was wiederholst du heute?</h1></div>`;
+  if (!S.index) return head + loadingRows(4);
+  if (!metas.length) return head + `<div class="panel empty"><h3>Noch keine Lektionen</h3><p>Lessons appear here once your class notes are in the repository. New ones are added every Tuesday and Thursday evening.</p></div>`;
+  const latest = metas[0];
+  const open = metas.filter(m => statusOf(m.id) !== "done");
+  const nextOpen = open.find(m => m.id !== latest.id);
+  const due = dueCards();
+  const done = metas.length - open.length;
+  const recent = S.sessions.slice(0, 3);
+  return `${head}
+  <div class="stats">
+    <div class="stat"><b>${streak()}</b><span>Tage in Folge</span></div>
+    <div class="stat"><b class="num">${done}<small class="muted" style="font-size:16px">/${metas.length}</small></b><span>Lektionen fertig</span></div>
+    <div class="stat"><b>${learnedCount()}</b><span>Wörter gelernt</span></div>
+  </div>
+  <section class="section"><h2>Letzte Stunde</h2>
+    <div class="panel hero">
+      <div class="row"><span class="chip lvl">${esc(latest.level)}</span><span class="muted small">${fmtDate(latest.date)}</span>${statusChip(latest.id)}</div>
+      <h3>${ttl(latest.title)}</h3>
+      ${latest.summary ? `<p class="muted">${esc(latest.summary)}</p>` : ""}
+      <div class="btns"><button class="btn primary" data-start="flash" data-lid="${esc(latest.id)}">Karteikarten</button><a class="btn" href="#l-${esc(latest.id)}">Lektion öffnen</a></div>
+    </div>
+  </section>
+  <section class="section"><h2>Wiederholen</h2>
+    <div class="panel">
+      ${due.length ? `<p><b class="num">${due.length}</b> ${due.length === 1 ? "Wort ist" : "Wörter sind"} heute fällig.</p><div class="btns"><button class="btn primary" data-start="review">Jetzt wiederholen</button></div>`
+        : `<p class="muted">Nichts fällig. Words you practise come back here on a schedule (after 1, 3, 7, 14 and 30 days) until you know them.</p>`}
+    </div>
+  </section>
+  ${nextOpen ? `<section class="section"><h2>Als Nächstes offen</h2><div class="list">${open.filter(m => m.id !== latest.id).slice(0, 3).map(lessonItem).join("")}</div></section>` : ""}
+  ${recent.length ? `<section class="section"><h2>Zuletzt geübt</h2><div class="log">${recent.map(logRow).join("")}</div></section>` : ""}`;
+}
+
+function statusChip(id) {
+  const s = statusOf(id);
+  return s === "done" ? '<span class="chip done">Abgeschlossen</span>' : s === "started" ? '<span class="chip started">Angefangen</span>' : '<span class="chip">Neu</span>';
+}
+
+function viewLessons() {
+  const metas = lessonsMeta();
+  const head = `<div class="lhead"><h1>Lektionen</h1><input id="q" class="search" type="search" placeholder="Suchen: Thema, z. B. Konjunktiv" autocomplete="off" aria-label="Lektionen durchsuchen"></div>`;
+  if (!S.index) return head + loadingRows(6);
+  return head + `<div id="lessonList" class="section">${lessonGroups(metas)}</div>`;
+}
+
+function lessonGroups(metas) {
+  const q = S.search.trim().toLowerCase();
+  const list = q ? metas.filter(m => (m.title + " " + (m.summary || "") + " " + m.date).toLowerCase().includes(q)) : metas;
+  if (!list.length) return `<div class="panel empty"><p>${q ? "Keine Lektion passt zu dieser Suche." : "Noch keine Lektionen."}</p></div>`;
+  const groups = [];
+  for (const m of list) {
+    const d = parseDay(m.date);
+    const key = `${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()} · ${m.level}`;
+    let g = groups[groups.length - 1];
+    if (!g || g.key !== key) { g = { key, items: [] }; groups.push(g); }
+    g.items.push(m);
+  }
+  return groups.map(g => `<h2 class="month">${esc(g.key)}</h2><div class="list">${g.items.map(lessonItem).join("")}</div>`).join("");
+}
+
+function viewLesson(id) {
+  const meta = lessonsMeta().find(m => m.id === id);
+  let L = S.lessons[id];
+  if (L === undefined) { loadLesson(id); L = S.lessons[id]; }
+  if (L === undefined) { return `<div class="lhead"><h2>${meta ? fmtDate(meta.date) : ""}</h2><h1>${ttl(meta ? meta.title : "Lektion")}</h1></div>${loadingRows(6)}`; }
+  if (L === null) return `<div class="panel empty"><h3>Lektion nicht gefunden</h3><p><a href="#lektionen">Zurück zur Liste</a></p></div>`;
+  const vocab = L.vocab || [], gram = L.grammar || [], phr = L.phrases || [], exs = L.exercises || [];
+  const status = statusOf(id), p = S.progress[id] || {};
+  const tabs = [["w", `Wörter (${vocab.length})`], ["g", `Grammatik (${gram.length})`], ["s", `Sätze (${phr.length})`]];
+  let body = "";
+  if (S.tab === "g") {
+    body = gram.length ? gram.map(g => `<div class="panel gcard"><h3>${esc(g.title)}</h3><p>${esc(g.explanation)}</p>
+      ${g.table && g.table.rows ? `<div class="tablewrap"><table>${g.table.head && g.table.head.length ? `<thead><tr>${g.table.head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>` : ""}<tbody>${g.table.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : ""}
+      ${g.examples && g.examples.length ? `<div class="exs">${g.examples.map(e => `<div><b>${esc(e.de)}</b><span>${esc(e.en)}</span></div>`).join("")}</div>` : ""}</div>`).join("")
+      : `<div class="panel empty"><p>No grammar point in this lesson.</p></div>`;
+  } else {
+    const rows = S.tab === "s"
+      ? phr.map((x, i) => `<div class="v" data-i="${i}"><div class="de">${esc(x.de)}</div>${sayBtn(x.de)}<div class="en">${esc(x.en || "")}</div>${x.orig && wordsDiffer(x.orig, x.de) ? `<div class="orig">Mitschrieb: <s>${esc(x.orig)}</s></div>` : ""}</div>`)
+      : vocab.map((x, i) => `<div class="v" data-i="${i}"><div class="de">${deHTML(x.de)}</div>${sayBtn(x.de)}<div class="en">${esc(x.en || "")}${x.added ? '<span class="added" title="translation added, not from the teacher">ergänzt</span>' : ""}${x.note ? ` <span class="muted small">(${esc(x.note)})</span>` : ""}</div>${x.example ? `<div class="ex">${esc(x.example)}</div>` : ""}</div>`);
+    body = rows.length ? `<div class="toggle"><span class="muted small">${S.hide ? "Tap a line to show it." : "Hide the English to test yourself."}</span><button class="switch" data-act="hide" aria-pressed="${S.hide}">Englisch verdecken</button></div>
+      <div class="vlist ${S.hide ? "hide" : ""}">${rows.join("")}</div>` : `<div class="panel empty"><p>Nothing here for this lesson.</p></div>`;
+  }
+  return `<div class="lhead">
+      <div class="row"><span class="chip lvl">${esc(L.level)}</span><span class="muted small">${fmtDate(L.date)}</span>${statusChip(id)}</div>
+      <h1>${ttl(L.title)}</h1>${L.summary ? `<p class="muted">${esc(L.summary)}</p>` : ""}
+      ${L.basic ? `<p class="small" style="color:var(--warn)">Rohfassung: imported automatically from the Excel file and not reviewed yet, so some translations are missing.</p>` : ""}
+      ${p.best ? `<p class="small muted">Bestes Ergebnis: <b class="num">${p.best}%</b> · ${p.n || 0} Übungen</p>` : ""}
+    </div>
+    <div class="btns">
+      ${vocab.length ? `<button class="btn primary" data-start="flash" data-lid="${esc(id)}">Karteikarten</button>` : ""}
+      ${vocab.length >= 4 ? `<button class="btn" data-start="quiz" data-lid="${esc(id)}">Quiz</button>` : ""}
+      ${phr.length ? `<button class="btn" data-start="phrases" data-lid="${esc(id)}">Sätze üben</button>` : ""}
+      ${exs.length ? `<button class="btn" data-start="ex" data-lid="${esc(id)}">Übungen (${exs.length})</button>` : ""}
+    </div>
+    <div class="seg" role="group" aria-label="Inhalt">${tabs.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${S.tab === k}">${l}</button>`).join("")}</div>
+    <div class="section">${body}</div>
+    <button class="btn ${status === "done" ? "" : "good"}" data-act="done" data-lid="${esc(id)}">${status === "done" ? "Als nicht abgeschlossen markieren" : "Lektion abschließen ✓"}</button>`;
+}
+
+function viewReview() {
+  const due = dueCards();
+  const all = []; for (const [lid, p] of Object.entries(S.progress)) for (const c of Object.values(p.cards || {})) all.push(c);
+  const boxes = [0, 0, 0, 0, 0, 0]; all.forEach(c => boxes[Math.min(c.b || 0, 5)]++);
+  const labels = ["Neu/falsch", "1 Tag", "3 Tage", "1 Woche", "2 Wochen", "1 Monat"];
+  return `<div class="lhead"><h1>Wiederholen</h1><p class="muted">Every word you practise goes into a box. Right answers move it up and it comes back later; a wrong answer sends it back to the start.</p></div>
+    <div class="panel hero">
+      ${due.length ? `<p><b class="num">${due.length}</b> ${due.length === 1 ? "Wort ist" : "Wörter sind"} fällig, aus ${new Set(due.map(d => d.lid)).size} Lektionen.</p>
+        <div class="btns"><button class="btn primary" data-start="review">Wiederholung starten</button></div>`
+      : `<p class="muted">${all.length ? "Alles erledigt für heute. Come back tomorrow, or practise a lesson." : "Practise a lesson with flashcards or the quiz, and its words will show up here when they are due."}</p>`}
+    </div>
+    ${all.length ? `<section class="section"><h2>Deine Boxen</h2><div class="panel"><div class="tablewrap"><table><thead><tr><th>Box</th><th>Kommt wieder nach</th><th>Wörter</th></tr></thead><tbody>
+      ${boxes.map((n, i) => `<tr><td class="num">${i}</td><td>${labels[i]}</td><td class="num">${n}</td></tr>`).join("")}</tbody></table></div></div></section>` : ""}`;
+}
+
+function logRow(s) {
+  const d = new Date(s.at);
+  const pct = s.total ? Math.round(100 * s.ok / s.total) : 0;
+  const cls = pct >= 80 ? "hi" : pct >= 50 ? "mid" : "lo";
+  const href = s.lid && s.lid !== "review" ? `#l-${esc(s.lid)}` : "#wiederholen";
+  return `<a class="e" href="${href}"><span class="tm">${pad(d.getHours())}:${pad(d.getMinutes())}</span>
+    <span class="w"><strong>${esc(s.title || "Wiederholung")}</strong><span>${esc(MODE_NAMES[s.mode] || s.mode)} · ${s.ok}/${s.total}${s.secs ? ` · ${Math.max(1, Math.round(s.secs / 60))} Min.` : ""}</span></span>
+    <span class="score ${cls}">${pct}%</span></a>`;
+}
+
+function viewArchive() {
+  const days = {}; S.sessions.forEach(s => { const k = dayKey(new Date(s.at)); days[k] = (days[k] || 0) + 1; });
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(today); start.setDate(start.getDate() - 7 * 16 + 1); start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const cells = [];
+  for (const d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+    const n = days[dayKey(d)] || 0;
+    cells.push(`<i data-n="${Math.min(n, 3)}" class="${dayKey(d) === dayKey(today) ? "today" : ""}" title="${d.getDate()}. ${MONTHS[d.getMonth()]}: ${n} Übungen"></i>`);
+  }
+  const metas = lessonsMeta();
+  const done = metas.filter(m => statusOf(m.id) === "done").length;
+  const mins = Math.round(S.sessions.reduce((a, s) => a + (s.secs || 0), 0) / 60);
+  const byDay = [];
+  for (const s of S.sessions) { const k = dayKey(new Date(s.at)); let g = byDay[byDay.length - 1]; if (!g || g.k !== k) { g = { k, items: [] }; byDay.push(g); } g.items.push(s); }
+  return `<div class="lhead"><h1>Archiv</h1><p class="muted">Everything you have practised, on any device.</p></div>
+    <div class="stats">
+      <div class="stat"><b class="num">${done}</b><span>von ${metas.length} Lektionen</span></div>
+      <div class="stat"><b class="num">${S.sessions.length}</b><span>Übungen</span></div>
+      <div class="stat"><b class="num">${mins}</b><span>Minuten</span></div>
+    </div>
+    <section class="section"><h2>Letzte 16 Wochen</h2><div class="panel"><div class="heat" aria-label="Übungen pro Tag">${cells.join("")}</div></div></section>
+    ${byDay.length ? byDay.map(g => `<section class="section"><h2>${(() => { const d = parseDay(g.k); return `${DAYS[d.getDay()]}, ${d.getDate()}. ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`; })()}</h2><div class="log">${g.items.map(logRow).join("")}</div></section>`).join("")
+      : `<div class="panel empty"><h3>Noch nichts geübt</h3><p>Finished flashcards, quizzes and exercises are listed here with their score.</p></div>`}`;
+}
+
+/* ---------- practice ---------- */
+let P = null;
+
+async function startPractice(mode, lid) {
+  let items = [], title = "", L = null;
+  if (mode === "review") {
+    const due = dueCards().slice(0, 30);
+    items = shuffle(due).map(c => ({ k: c.k, lid: c.lid, de: c.de, en: c.en }));
+    title = "Wiederholung";
+  } else {
+    if (S.lessons[lid] === undefined) { await loadLesson(lid); }
+    L = S.lessons[lid];
+    if (!L) { toast("Lektion konnte nicht geladen werden."); return; }
+    title = L.title;
+    if (mode === "flash" || mode === "quiz") items = (L.vocab || []).filter(v => v.en).map(v => ({ k: cardKey(v.de), lid, de: v.de, en: v.en, ex: v.example }));
+    if (mode === "phrases") items = (L.phrases || []).filter(v => v.en).map(v => ({ k: cardKey(v.de), lid, de: v.de, en: v.en }));
+    if (mode === "ex") items = (L.exercises || []).map((x, i) => ({ k: "x" + i, lid, prompt: x.prompt, answer: x.answer, hint: x.hint }));
+    if (mode === "flash" || mode === "phrases") items = shuffle(items);
+    if (mode === "quiz") items = shuffle(items).slice(0, 12);
+  }
+  if (!items.length) { toast("Nichts zu üben."); return; }
+  const pool = mode === "quiz" ? (L.vocab || []).filter(v => v.en).map(v => v.en) : [];
+  P = { mode, lid: lid || "review", title, items, i: 0, res: {}, requeued: {}, flipped: false, answered: null, started: Date.now(), pool, dir: S.dir, total: items.length, saved: false };
+  if (mode === "quiz") prepQuiz();
+  $("#sheet").hidden = false; document.body.style.overflow = "hidden";
+  renderSheet();
+}
+
+function prepQuiz() {
+  const it = P.items[P.i]; if (!it) return;
+  const wrong = shuffle([...new Set(P.pool.filter(e => e !== it.en))]).slice(0, 3);
+  P.options = shuffle([it.en, ...wrong]);
+  P.answered = null;
+}
+
+function renderSheet() {
+  const sh = $("#sheet");
+  if (!P) { sh.hidden = true; sh.innerHTML = ""; document.body.style.overflow = ""; return; }
+  const doneCount = Object.keys(P.res).length;
+  const finished = P.i >= P.items.length;
+  const head = `<div class="wrap bar"><button class="x" data-act="close" aria-label="Beenden">${ICON.close}</button>
+      <div style="flex:1;min-width:0"><div class="small muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(MODE_NAMES[P.mode])} · ${esc(P.title)}</div></div>
+      <span class="num small muted">${Math.min(P.i + (finished ? 0 : 1), P.items.length)} / ${P.items.length}</span>
+      ${(P.mode === "flash" || P.mode === "phrases" || P.mode === "review") && !finished ? `<button class="switch" data-act="dir" aria-label="Richtung wechseln">${P.dir === "de" ? "DE → EN" : "EN → DE"}</button>` : ""}</div>
+    <div class="wrap"><div class="prog"><i style="width:${Math.round(100 * (finished ? 1 : P.i / P.items.length))}%"></i></div></div>`;
+  let stage = "", controls = "";
+  if (finished) {
+    const ok = Object.values(P.res).filter(Boolean).length, total = doneCount;
+    const pct = total ? Math.round(100 * ok / total) : 0;
+    const missed = P.items.filter(it => P.res[it.k] === false);
+    stage = `<div class="result"><div class="big ${pct >= 80 ? "score hi" : pct >= 50 ? "score mid" : "score lo"}">${pct}%</div>
+      <p>${ok} von ${total} ${P.mode === "ex" ? "richtig" : "beim ersten Mal gewusst"}.</p>
+      ${missed.length ? `<div class="panel missed"><h2>Nochmal ansehen</h2>${missed.map(m => `<div>${m.de ? `<b>${deHTML(m.de)}</b> · <span class="muted">${esc(m.en)}</span>` : `<b>${esc(m.prompt.replace("___", m.answer))}</b>`}</div>`).join("")}</div>` : ""}
+      <p class="small muted">${P.saved ? "Im Archiv gespeichert." : ""}</p></div>`;
+    controls = `<div class="controls ${missed.length && P.mode !== "ex" ? "" : "one"}">${missed.length && P.mode !== "ex" ? `<button class="btn" data-act="redo">Fehler üben</button>` : ""}<button class="btn primary" data-act="close">Fertig</button></div>`;
+  } else {
+    const it = P.items[P.i];
+    if (P.mode === "quiz") {
+      stage = `<div class="card" style="cursor:default"><div class="hint">Was bedeutet…</div><div class="front ${it.de.length > 28 ? "long" : ""}">${deHTML(it.de)}</div>${sayBtn(it.de)}</div>
+        <div class="opts">${P.options.map((o, n) => {
+          let cls = ""; if (P.answered !== null) { if (o === it.en) cls = "right"; else if (n === P.answered) cls = "wrong"; }
+          return `<button class="opt ${cls}" data-opt="${n}" ${P.answered !== null ? "disabled" : ""}>${esc(o)}</button>`; }).join("")}</div>`;
+      controls = `<div class="controls one"><button class="btn primary" data-act="next" ${P.answered === null ? "disabled" : ""}>Weiter</button></div>`;
+    } else if (P.mode === "ex") {
+      const parts = esc(it.prompt).split("___");
+      stage = `<div class="panel cloze"><div>${parts.join('<b style="border-bottom:2px solid var(--accent);padding:0 18px">&nbsp;</b>')}</div>
+        <input id="ans" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Antwort" ${P.answered !== null ? "disabled" : ""} value="${esc(P.typed || "")}">
+        ${it.hint && P.answered === null ? `<div class="hint small muted" style="margin-top:6px">Tipp: ${esc(it.hint)}</div>` : ""}</div>
+        ${P.answered !== null ? `<div class="verdict ${P.answered ? "ok" : "no"}">${P.answered ? "Richtig!" : "Lösung:"} <span style="color:var(--ink)">${esc(it.answer)}</span></div>` : ""}`;
+      controls = P.answered === null
+        ? `<div class="controls"><button class="btn" data-act="skip">Weiß nicht</button><button class="btn primary" data-act="check">Prüfen</button></div>`
+        : `<div class="controls one"><button class="btn primary" data-act="next">Weiter</button></div>`;
+    } else {
+      const front = P.dir === "de" ? it.de : it.en, back = P.dir === "de" ? it.en : it.de;
+      stage = `<div class="card" data-act="flip" role="button" aria-label="Karte umdrehen">
+          <div class="front ${front.length > 28 ? "long" : ""}">${P.dir === "de" ? deHTML(front) : esc(front)}</div>
+          ${P.flipped ? `<div class="back">${P.dir === "de" ? esc(back) : deHTML(back)}${it.ex ? `<span class="ex">${esc(it.ex)}</span>` : ""}</div>` : `<div class="hint">Antippen zum Umdrehen</div>`}
+        </div>${P.flipped || P.dir === "de" ? `<div style="display:grid;justify-items:center">${sayBtn(it.de)}</div>` : ""}`;
+      controls = P.flipped
+        ? `<div class="controls"><button class="btn bad" data-act="again">Nochmal</button><button class="btn good" data-act="know">Gewusst</button></div>`
+        : `<div class="controls one"><button class="btn primary" data-act="flip">Umdrehen</button></div>`;
+    }
+  }
+  sh.innerHTML = head + `<div class="wrap stage">${stage}</div><div class="wrap">${controls}</div>`;
+  const inp = $("#ans"); if (inp && P.answered === null) inp.focus();
+}
+
+function answer(ok) {
+  const it = P.items[P.i];
+  if (!(it.k in P.res)) P.res[it.k] = ok;
+  if (!ok && (P.mode === "flash" || P.mode === "phrases" || P.mode === "review") && !P.requeued[it.k]) { P.requeued[it.k] = true; P.items.push(it); }
+}
+function next() {
+  P.i++; P.flipped = false; P.answered = null; P.typed = "";
+  if (P.mode === "quiz") prepQuiz();
+  if (P.i >= P.items.length) saveSession();
+  renderSheet();
+}
+
+const normAns = s => String(s).toLowerCase().normalize("NFC").replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, " ").trim()
+  .replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u"); // typing without umlauts (u for ü) is accepted too
+// leading "zum / zur / beim / der / die …" is optional when typing an answer
+const LEAD = /^(zu der|zu dem|zu einer|zu einem|bei der|bei dem|in die|in den|in das|zum|zur|zu|beim|bei|ins|der|die|das|dem|den|ein|eine|einen|einer|einem)\s+/;
+function answerVariants(answer) {
+  const base = String(answer), out = new Set();
+  const inParens = [...base.matchAll(/\(([^)]*)\)/g)].map(m => m[1]);
+  for (const s of [base, base.replace(/\([^)]*\)/g, " "), ...inParens]) {
+    for (const part of [s, ...s.split(/\s*[\/,;]\s*|\s+oder\s+/)]) {
+      const n = normAns(part);
+      if (n) { out.add(n); out.add(n.replace(LEAD, "")); }
+    }
+  }
+  return out;
+}
+function isRight(input, answer) {
+  const a = normAns(input); if (!a) return false;
+  const v = answerVariants(answer);
+  return v.has(a) || v.has(a.replace(LEAD, ""));
+}
+
+function saveSession() {
+  if (!P || P.saved) return;
+  const run = P;
+  const total = Object.keys(run.res).length; if (!total) return;
+  const ok = Object.values(run.res).filter(Boolean).length;
+  const pct = Math.round(100 * ok / total);
+  const now = Date.now(), iso = new Date(now).toISOString();
+  const touch = lid => { const cur = S.progress[lid] || {}; return Object.assign({}, cur, { last: iso, status: cur.status || "started" }); };
+  if (run.mode !== "ex") {
+    const byLesson = {}, seen = {};
+    for (const it of run.items) {
+      if (seen[it.k + it.lid] || !(it.k in run.res)) continue; seen[it.k + it.lid] = true;
+      const cur = ((S.progress[it.lid] || {}).cards || {})[it.k] || {};
+      const b = run.res[it.k] ? Math.min((cur.b || 0) + 1, 5) : 0;
+      (byLesson[it.lid] = byLesson[it.lid] || {})[it.k] = { de: it.de, en: it.en, b, t: now };
+    }
+    for (const [lid, cards] of Object.entries(byLesson)) {
+      const doc = touch(lid); doc.cards = Object.assign({}, doc.cards || {}, cards); S.data.progress[lid] = doc;
+    }
+  }
+  if (run.lid !== "review") {
+    const doc = S.data.progress[run.lid] || touch(run.lid);
+    doc.n = (doc.n || 0) + 1; doc.best = Math.max(doc.best || 0, pct); S.data.progress[run.lid] = doc;
+  }
+  S.data.sessions.unshift({ id: now.toString(36) + Math.random().toString(36).slice(2, 7), at: iso, lid: run.lid, title: run.title, mode: run.mode, ok, total, secs: Math.round((now - run.started) / 1000) });
+  run.saved = true;
+  markDirty();
+  if (P === run) renderSheet();
+}
+
+function closeSheet() {
+  if (P && !P.saved && P.i < P.items.length && Object.keys(P.res).length) saveSession();
+  P = null; renderSheet(); render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button, [data-act], .v");
+  if (!t) return;
+  if (t.dataset.say) { e.stopPropagation(); speak(t.dataset.say); return; }
+  if (t.dataset.start) { startPractice(t.dataset.start, t.dataset.lid); return; }
+  if (t.dataset.tab) { S.tab = t.dataset.tab; LS.set("tab", S.tab); render(); return; }
+  if (t.classList.contains("v")) { if (S.hide) t.classList.toggle("show"); return; }
+  if (t.dataset.opt !== undefined && P && P.answered === null) {
+    const n = Number(t.dataset.opt); P.answered = n; answer(P.options[n] === P.items[P.i].en); renderSheet(); return;
+  }
+  const act = t.dataset.act;
+  if (!act) return;
+  if (act === "hide") { S.hide = !S.hide; render(); }
+  else if (act === "done") {
+    const lid = t.dataset.lid, iso = new Date().toISOString();
+    const cur = S.progress[lid] || {};
+    S.data.progress[lid] = Object.assign({}, cur, cur.status === "done" ? { status: "started", doneAt: null, statusAt: iso } : { status: "done", doneAt: iso, statusAt: iso });
+    markDirty(); toast(cur.status === "done" ? "Markierung entfernt." : "Lektion abgeschlossen.");
+  }
+  else if (act === "retry") { S.conn = "loading"; render(); refresh(); }
+  else if (act === "logout") { CFG = null; LS.set("cfg", null); S.conn = "setup"; toast("Token entfernt."); render(); }
+  else if (!P) return;
+  else if (act === "close") closeSheet();
+  else if (act === "flip") { P.flipped = !P.flipped; if (P.flipped && P.dir === "en") speak(P.items[P.i].de); renderSheet(); }
+  else if (act === "know") { answer(true); next(); }
+  else if (act === "again") { answer(false); next(); }
+  else if (act === "next") next();
+  else if (act === "dir") { P.dir = P.dir === "de" ? "en" : "de"; S.dir = P.dir; LS.set("dir", P.dir); P.flipped = false; renderSheet(); }
+  else if (act === "check" || act === "skip") {
+    const it = P.items[P.i]; const val = act === "skip" ? "" : ($("#ans") || {}).value || "";
+    P.typed = val; P.answered = isRight(val, it.answer); answer(P.answered); renderSheet();
+  }
+  else if (act === "redo") {
+    const missed = P.items.filter((it, i, a) => P.res[it.k] === false && a.findIndex(x => x.k === it.k) === i);
+    const mode = P.mode === "quiz" ? "flash" : P.mode, lid = P.lid, title = P.title;
+    P = { mode, lid, title, items: shuffle(missed), i: 0, res: {}, requeued: {}, flipped: false, answered: null, started: Date.now(), pool: [], dir: S.dir, total: missed.length, saved: false };
+    renderSheet();
+  }
+});
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "setup") return;
+  e.preventDefault();
+  const repo = $("#repo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, "");
+  const token = $("#token").value.trim() || (CFG && CFG.token) || "";
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo) || !token) { toast("Repository (owner/name) und Token eingeben."); return; }
+  CFG = { repo, token }; LS.set("cfg", CFG);
+  S.conn = "loading"; S.err = ""; render();
+  await refresh();
+  if (S.conn === "ok") { toast("Verbunden."); location.hash = "#heute"; }
+});
+document.addEventListener("keydown", e => {
+  if (!P) return;
+  if (e.key === "Enter" && P.mode === "ex") { e.preventDefault(); const b = $(P.answered === null ? '[data-act="check"]' : '[data-act="next"]'); if (b) b.click(); }
+  else if (e.key === "Escape") closeSheet();
+  else if (P.mode !== "ex" && P.mode !== "quiz" && P.i < P.items.length) {
+    if (e.key === " ") { e.preventDefault(); P.flipped = !P.flipped; renderSheet(); }
+    else if (P.flipped && (e.key === "ArrowRight" || e.key === "j")) { answer(true); next(); }
+    else if (P.flipped && (e.key === "ArrowLeft" || e.key === "n")) { answer(false); next(); }
+  }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "q") { S.search = e.target.value; const l = $("#lessonList"); if (l) l.innerHTML = lessonGroups(lessonsMeta()); }
+  if (e.target.id === "ans" && P) P.typed = e.target.value;
+});
+if (canSpeak) { try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; } catch (e) { /* ignore */ } }
+
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+render();
+init();
+</script>
+</body>
+</html>
